@@ -1,4 +1,0 @@
-syntax: glob
-pyinstaller/**
-
-syntax: regexp
