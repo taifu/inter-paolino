@@ -12,9 +12,17 @@ def spacify(value):
 def get_stadio(value):
     parts = spacify(value).split()
     stadio = parts.pop(0)
-    nome = parts.pop()
-    if not (stadio in ('vigevano', 'udine', 'reggio', 'bergamo') or stadio in ('torino') and nome in ('olimpico', 'comunale', 'torino')):
-        stadio += nome
+    if stadio == 'reggio':
+        for check, add in (('mirabello', None), ('giglio', 'mapei'), ('mapei', None)):
+            if check in parts:
+                stadio += add or check
+                break
+        else:
+            assert False
+    else:
+        nome = parts.pop()
+        if not (stadio in ('vigevano', 'udine', 'bergamo') or stadio in ('torino') and nome in ('olimpico', 'comunale', 'torino')):
+            stadio += nome
     return stadio
 
 MAP_SQUADRE = {
@@ -61,13 +69,13 @@ def check(args):
             assert stadio in stadi, (stadio, sh_partite.cell(n, 2).value, stadi)
         else:
             goals = sh_partite.cell(n, 3).value.strip()
-            if goals and not 'sosp' in goals:
+            if goals:
                 squadra1, squadra2 = get_squadre(sh_partite.cell(n, 2).value, 2)
                 goal1, goal2 = [int(value) for value in sh_partite.cell(n, 3).value.replace('-', ' ').split()[:2]]
                 ok_squadra = True
                 for squadra in (squadra1, squadra2):
                     if not squadra == INTER and not squadra in squadre:
-                        print squadra.title(), ": squadra non trovata", sorted(squadre)
+                        print(squadra.title(), ": squadra non trovata", sorted(squadre))
                         ok_squadra = False
                 if ok_squadra:
                     others = False
@@ -101,7 +109,7 @@ def check(args):
             n_partite_file = int(sh_stadi.cell(n_stadio, 2 + n).value or '0')
             stadio = sh_stadi.cell(n_stadio, 1).value
             if n_partite_file != n_partite:
-                print "Partite %s diverse per stadio \"%s\": file=%s, calcolo=%s" % (label, stadio, n_partite_file, n_partite)
+                print("Partite %s diverse per stadio \"%s\": file=%s, calcolo=%s" % (label, stadio, n_partite_file, n_partite))
     for squadra, n_squadra in sorted(squadre.items()):
         vittorie_inter[n_squadra] += 0
         pareggi_inter[n_squadra] += 0
@@ -110,14 +118,15 @@ def check(args):
         vittorie_file, pareggi_file, sconfitte_file = [int(sh_squadre.cell(n_squadra, n).value or '0') for n in (7, 8, 9)]
         squadra = sh_squadre.cell(n_squadra, 1).value
         if vittorie_file != vittorie:
-            print "Vittorie diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, vittorie_file, vittorie)
+            print("Vittorie diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, vittorie_file, vittorie))
         if pareggi_file != pareggi:
-            print "Pareggi diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, pareggi_file, pareggi)
+            print("Pareggi diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, pareggi_file, pareggi))
         if sconfitte_file != sconfitte:
-            print "Sconfitte diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, sconfitte_file, sconfitte)
+            print("Sconfitte diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, sconfitte_file, sconfitte))
         totale = int(sh_squadre.cell(n_squadra, 6).value or '0')
         if sconfitte_file + pareggi_file + vittorie_file != totale:
-            print "Totali partite diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, totale, sconfitte_file + pareggi_file + vittorie_file)
+            print("Totali partite diverse per squadra \"%s\": file=%s, calcolo=%s" % (squadra, totale, sconfitte_file + pareggi_file + vittorie_file))
+    print("Check completo")
     assert not vittorie_inter
     assert not pareggi_inter
     assert not sconfitte_inter
